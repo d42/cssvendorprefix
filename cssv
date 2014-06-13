@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+import sys
+import argparse
+import pickle
+from os import path
+PREFIX = path.join(path.dirname(__file__), "cssvendorprefix")
+PICKLE_FILE = path.join(PREFIX, 'pickled_tags')
+
+with open(PICKLE_FILE, 'br') as file:
+    expandable = pickle.load(file)
+
+
+def expand(tag, line):
+    params = line.partition(tag)[2]
+
+    for prefix in ('-o', '-ms', '-moz', '-webkit'):
+            yield ' ' * 4 + prefix + '-' + tag + params
+
+
+def expand_vendor_tags(text):
+    lines = text.split('\n')
+    new_lines = []
+    for l in lines:
+        if not l:
+            continue
+
+        token = l.strip().split()[0].split(':')[0]
+        if token.startswith('-'):
+            continue
+
+        if token in expandable:
+            new_lines.extend(expand(token, l))
+        else:
+            new_lines.append(l)
+
+    return '\n'.join(new_lines)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filein', help="dda")
+    parser.add_argument('-fileout', required=False,  help="input file")
+
+    options = parser.parse_args(sys.argv[1:])
+    filein, fileout = options.filein, options.fileout
+    fileout = (fileout if fileout else path.splitext(filein)[0] + '.post.css')
+
+    with open(options.filein) as file:
+        output = expand_vendor_tags(file.read())
+    with open(fileout, 'a+') as file:
+        file.write(output)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        replies = {
+            FileNotFoundError: "file not found!"
+        }
+        r = replies.get(type(e), None)
+        if r:
+            print(r)
+        else:
+            raise(e)
