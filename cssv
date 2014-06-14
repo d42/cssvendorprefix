@@ -4,7 +4,10 @@ import sys
 import argparse
 import pickle
 from os import path
-PREFIX = path.join(path.dirname(__file__), "cssvendorprefix")
+
+
+PREFIX = path.join(path.dirname(__file__), "stuff")
+
 PICKLE_FILE = path.join(PREFIX, 'pickled_tags')
 
 with open(PICKLE_FILE, 'br') as file:
@@ -47,7 +50,7 @@ def main():
 
     with open(options.filein) as file:
         output = expand_vendor_tags(file.read())
-    with open(fileout, 'a+') as file:
+    with open(fileout, 'w+') as file:
         file.write(output)
 
 
